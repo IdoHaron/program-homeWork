@@ -11,7 +11,8 @@ socketio = SocketIO(app)
 
 
 #region variables
-video = cv2.VideoCapture("MovieSPR.mp4");
+video = cv2.VideoCapture("MovieSPR.mp4")
+isStreaming = False
 #endregion
 
 
@@ -22,19 +23,21 @@ def RenderIndex():
 
 @socketio.on("connected")
 def connected():
+    global isStreaming
     print("connected")
     ##emit("Ap-connection", {'msg': "succefuly connected"})
+    if(isStreaming== True):
+        return None
+    isStreaming = True
     isFrame, frame = video.read()
     while isFrame:
-        try:
-            cv2.imwrite("Current_frame.png", frame)        
+        cv2.imwrite("Current_frame.png", frame)        
             ##emit("frame", {'frame': frame}, broadcast= True);
-            cv2.waitKey(10)
-            with open("Current_frame.png", "rb") as Cframe:
-                emit("Frame", {'frame':(Cframe.read())}, broadcast=True)
-        except:
-            pass
+        cv2.waitKey(30)
+        with open("Current_frame.png", "rb") as Cframe:
+            emit("Frame", {'frame':(Cframe.read())}, broadcast=True)
         isFrame, frame = video.read()
+    isStreaming = False
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
