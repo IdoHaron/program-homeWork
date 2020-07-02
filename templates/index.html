@@ -14,17 +14,21 @@
     <form>
         <input type="text" id="Get_Poly">
         <input type="button" name="print polygon" onclick="Send_Poly()" value="print polygon">
+        <br>
+        <input type="button" value="Send poly from clicks" onclick="SendClicekdPoly()">
     </form>
     <script>
         let socket = io.connect("http://"+document.domain+':'+location.port);
         let img = document.createElement("img");
         let is_first= true;
         let MovieBox = document.getElementById("frames");
+        let clickedPoints = [];/*OnClickPoints*/
         let PaintingBox = document.getElementById("painting");
         set_canvasProp(MovieBox);
         set_canvasProp(PaintingBox);
         let CntxMovieBox = MovieBox.getContext("2d");
         let CntxPaintingBox = PaintingBox.getContext("2d");
+        PaintingBox.addEventListener("mousedown", (e)=>ClickEventDraw(e, CntxPaintingBox, PaintingBox));
         socket.on("connect", ()=>{
             socket.emit("connected");
         });
@@ -44,7 +48,18 @@
         });
 
         socket.on("draw_poly", (Poly)=>{
-        })
+            console.log(Poly.Poly);
+            let PointArray = Poly.Poly;
+            let PALength = PointArray.length;
+            if(PALength<=1)
+                return; // no point in drawing one point, not a polygon.
+            CntxPaintingBox.beginPath();
+            CntxPaintingBox.moveTo(PointArray[0][0], PointArray[0][1]);
+            for(i=1; i<=PALength; i++)
+                CntxPaintingBox.lineTo(PointArray[i%PALength][0], PointArray[i%PALength][1]);// the modulo adds a line from the last point to the first, closes the polygon
+            CntxPaintingBox.stroke();
+        });
+
 
         function base64ArrayBuffer(arrayBuffer) {
         var base64    = ''
@@ -100,6 +115,9 @@
         function set_canvasProp(canvas){
             canvas.width = 600;
             canvas.height = 600;
+            canvas.style.position = "absolute";
+            canvas.style.top = "300px";
+            canvas.style.left = "300px";
         }
         function clear_cavasCntx(Cntx, canvas){
             console.log("the canvas was cleared");
@@ -114,9 +132,24 @@
             for(let i = 0; i<Splited_Point.length; i++){
                 Splited_ToNums = Splited_Point[i].split(",")
                 saver = [Splited_ToNums[0].substring(1), Splited_ToNums[1].substring(0, Splited_ToNums[1].length-1)]
+                console.log(saver);
                 numArray.push([parseInt(saver[0]), parseInt(saver[1])]);
             }
-            socket.emit("draw_poly", numArray);
+            socket.emit("Polygon", numArray);
+        }
+        function ClickEventDraw(e, cntx, canvas){
+            let Normalizer = canvas.getBoundingClientRect();
+            let NormaledPoints=[e.clientX-Normalizer.left, e.clientY-Normalizer.top];
+            clickedPoints.push(NormaledPoints);
+            console.log("onClickEvent");
+            cntx.fillRect(NormaledPoints[0], NormaledPoints[1], 5, 5);
+        }
+        function SendClicekdPoly(){
+            socket.emit("Polygon", clickedPoints);
+            clickedPoints.forEach(element => {
+                CntxPaintingBox.clearRect(element[0], element[1], 5, 5);
+            });
+            clickedPoints = [];
         }
     </script>
 </body>
