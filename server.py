@@ -33,7 +33,7 @@ def connected():
     while isFrame:
         cv2.imwrite("Current_frame.png", frame)        
             ##emit("frame", {'frame': frame}, broadcast= True);
-        cv2.waitKey(30)
+        cv2.waitKey(10000)
         with open("Current_frame.png", "rb") as Cframe:
             emit("Frame", {'frame':(Cframe.read())}, broadcast=True)
         isFrame, frame = video.read()

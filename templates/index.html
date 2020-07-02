@@ -9,25 +9,34 @@
 <body>
     <h1>Welcome</h1>
     <div id="MovieFrameByFrame"></div>
+    <canvas id= "frames"></canvas>
+    <canvas id= "painting"></canvas>
     <script>
         let socket = io.connect("http://"+document.domain+':'+location.port);
         let img = document.createElement("img");
         let is_first= true;
-        let MovieBox = document.getElementById("MovieFrameByFrame")
+        let MovieBox = document.getElementById("frames");
+        let PaintingBox = document.getElementById("painting");
+        set_canvasProp(MovieBox);
+        set_canvasProp(PaintingBox);
+        let CntxMovieBox = MovieBox.getContext("2d");
+        let CntxPaintingBox = PaintingBox.getContext("2d");
         socket.on("connect", ()=>{
             socket.emit("connected");
         });
         socket.on("Ap-connection", (msg)=>{
             console.log('here'); 
         });
-        socket.on("Frame",(Frame)=>{
+        socket.on("Frame", async (Frame)=>{
             console.log("Frame");
             if(!is_first)
-                MovieBox.removeChild(img)
-            is_first = false;
+                clear_cavasCntx(CntxMovieBox, MovieBox);
             img.src = 'data:image/jpg;base64, '+base64ArrayBuffer(Frame.frame);
             img.style.width="100%";
-            MovieBox.appendChild(img);
+            img.onload= () => {
+                CntxMovieBox.drawImage(img, 0, 0);
+                is_first = false;
+            };
         });
 
         function base64ArrayBuffer(arrayBuffer) {
@@ -81,6 +90,16 @@
         
         return base64
     }
+        function set_canvasProp(canvas){
+            canvas.width = 600;
+            canvas.height = 600;
+        }
+        function clear_cavasCntx(Cntx, canvas){
+            console.log("the canvas was cleared");
+            Cntx.clearRect(0, 0, canvas.width, canvas.height); 
+        }
+
+        
     </script>
 </body>
 </html>
