@@ -11,6 +11,10 @@
     <div id="MovieFrameByFrame"></div>
     <canvas id= "frames"></canvas>
     <canvas id= "painting"></canvas>
+    <form>
+        <input type="text" id="Get_Poly">
+        <input type="button" name="print polygon" onclick="Send_Poly()" value="print polygon">
+    </form>
     <script>
         let socket = io.connect("http://"+document.domain+':'+location.port);
         let img = document.createElement("img");
@@ -38,6 +42,9 @@
                 is_first = false;
             };
         });
+
+        socket.on("draw_poly", (Poly)=>{
+        })
 
         function base64ArrayBuffer(arrayBuffer) {
         var base64    = ''
@@ -98,8 +105,19 @@
             console.log("the canvas was cleared");
             Cntx.clearRect(0, 0, canvas.width, canvas.height); 
         }
-
-        
+        function Send_Poly(){
+            let StringPoints = document.getElementById("Get_Poly").value;
+            let Splited_Point = StringPoints.split(";");
+            let Splited_ToNums;
+            let saver;
+            let numArray= [];
+            for(let i = 0; i<Splited_Point.length; i++){
+                Splited_ToNums = Splited_Point[i].split(",")
+                saver = [Splited_ToNums[0].substring(1), Splited_ToNums[1].substring(0, Splited_ToNums[1].length-1)]
+                numArray.push([parseInt(saver[0]), parseInt(saver[1])]);
+            }
+            socket.emit("draw_poly", numArray);
+        }
     </script>
 </body>
 </html>

@@ -39,6 +39,10 @@ def connected():
         isFrame, frame = video.read()
     isStreaming = False
 
+@socketio.on("Polygon")
+def Send_Polygon(Poly):
+    emit("draw_poly", {'Poly': Poly}, broadcast = True)
+
 if __name__ == '__main__':
     socketio.run(app, debug=True)
 
